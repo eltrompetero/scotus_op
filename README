@@ -1,0 +1,10 @@
+# SCOTUS opinion and votes project
+
+Combining information about opinions and votes.
+
+Find configuration directories in dir.py. 
+
+Must make sure to install several pieces before running code
+```bash
+$ conda install -c conda-forge spacy space-lookups-data spacy-transformers
+```
