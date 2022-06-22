@@ -1,3 +1,5 @@
+DATADR = '/home/anna/fast/scotus_big'
+
 # ====================================================================================== #
 # Preprocessing raw data files such as from CourtListener.
 # Author: Eddie Lee, edlee@csh.ac.at
@@ -9,9 +11,6 @@ import re
 from string import punctuation
 from spacy.lang.en import English
 
-from .dir import *
-
-punctuation += '“”’'
 
 def extract_plain_txt():
     """Iterate thru all JSON raw files and extract plain text for each json from HTML
@@ -53,44 +52,72 @@ def split_by_sub_op(text):
     list of str
     """
     
+    labels = ['maj']
+    
     # put into list of text split into sections
-    text = re.split(r'(\n        [ ]+.*(?!\n.*)concurring.*\n)', text)
-    if len(text)==1:
-        return text
+    text = re.split(r'(\n.*[A-Z]{3,}.{0,10}concurring\.{,1}[ ]*\n)', text)
+    if len(text)!=1:
+        # combine sections that all belong to the same concurrence
+        # 0th item is majority op, so start looking for concurrences afterwards
+        conc_text = [text[1]]
+        labels.append('conc')
+        # standardize sub-op header for matching later
+        cheaders = [standardize_header(text[1])]
+        conc_head = cheaders[-1]
+        for i in range((len(text)-1)//2):
+            if conc_head==standardize_header(text[i*2+1]):
+                conc_text[-1] += text[(i+1)*2]
+            else:
+                conc_head = standardize_header(text[i*2+1])
+                if conc_head in cheaders:
+                    # combine everything from that point in the past onwards
+                    ix = cheaders.index(conc_head)
+                    conc_text[ix] = ''.join(conc_text[ix:])+dtext[(i+1)*2]
 
-    # combine sections that all belong to the same concurrence
-    # 0th item is majority op, so start looking for concurrences afterwards
-    conc_text = [text[1]]
-    # standardize sub-op header for matching later
-    conc_head = standardize_header(text[1])
-    for i in range((len(text)-1)//2):
-        if conc_head==standardize_header(text[i*2+1]):
-            conc_text[-1] += text[(i+1)*2]
-        else:
-            conc_head = standardize_header(text[i*2+1].split())
-            conc_text.append(text[(i+1)*2])
-    text = text[:1]
-    text.extend(conc_text)
-
+                    del conc_text[ix+1:]
+                    del labels[ix+2:]
+                    del cheaders[ix+1:]
+                else:
+                    conc_text.append(text[i*2+1]+text[(i+1)*2])
+                    labels.append('conc')
+        text = text[:1]
+        text.extend(conc_text)
+    
     # same process for dissents (presuming they come after)
-    dtext = re.split(r'(\n        [ ]+.*(?!\n.*)dissenting.*\n)', text[-1])
+    dtext = re.split(r'(\n.*[A-Z]{3,}.{0,10}dissenting\.{,1}[ ]*\n)', text[-1])
     if len(dtext)==1:
-        return text
+        return (labels,text)
+    text[-1] = dtext[0]
 
     # combine sections that all belong to the same concurrence
     # 0th item is majority op, so start looking for concurrences afterwards
+    dlabels = ['dis']
     dis_text = [dtext[1]]
-    dis_head = standardize_header(dtext[1])
+    dheaders = [standardize_header(dtext[1])]
+    dis_head = dheaders[-1]
     for i in range((len(dtext)-1)//2):
         if dis_head==standardize_header(dtext[i*2+1]):
             dis_text[-1] += dtext[(i+1)*2]
         else:
-            dis_head = standardize_header(dtext[i*2+1].split())
-            dis_text.append(dtext[(i+1)*2])
+            dis_head = standardize_header(dtext[i*2+1])
+            # check that this head has not already appeared in the past
+            print(dis_head)
+            if dis_head in dheaders:
+                # combine everything from that point in the past onwards
+                ix = dheaders.index(dis_head)
+                dis_text[ix] = ''.join(dis_text[ix:])+dtext[(i+1)*2]
+                
+                del dis_text[ix+1:]
+                del dlabels[ix+1:]
+                del dheaders[ix+1:]
+            else: 
+                dis_text.append(dtext[i*2+1]+dtext[(i+1)*2])
+                dlabels.append('dis')
     dtext = dtext[:1]
     text.extend(dis_text)
+    labels.extend(dlabels)
 
-    return text
+    return (labels,text)
 
 def standardize_header(s):
     return ''.join(s.split()).replace(',', '').replace('.', '')
@@ -106,9 +133,6 @@ def preprocess_plain_txt_op(text):
     -------
     str
     """
-    
-    # remove page headers which typically consist of four lines preceded by a line break
-    text = ''.join(re.split(r'\x0c.*\n.*\n.*\n.*\n', text))
 
     # configure auto parsing
     nlp = English()
@@ -122,9 +146,6 @@ def preprocess_plain_txt_op(text):
     for s in doc.sents:
         # lemmatized
         t = s.lemma_
-
-        # remove new strings that simply split words onto two lines
-        t = t.replace('-\n', '')
 
         # remove new string
         t = t.replace('\n', ' ')
