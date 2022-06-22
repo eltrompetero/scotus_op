@@ -66,7 +66,7 @@ def split_by_sub_op(text):
         if conc_head==standardize_header(text[i*2+1]):
             conc_text[-1] += text[(i+1)*2]
         else:
-            conc_head = ''.join(text[i*2+1].split())
+            conc_head = standardize_header(text[i*2+1].split())
             conc_text.append(text[(i+1)*2])
     text = text[:1]
     text.extend(conc_text)
@@ -84,7 +84,7 @@ def split_by_sub_op(text):
         if dis_head==standardize_header(dtext[i*2+1]):
             dis_text[-1] += dtext[(i+1)*2]
         else:
-            dis_head = ''.join(dtext[i*2+1].split())
+            dis_head = standardize_header(dtext[i*2+1].split())
             dis_text.append(dtext[(i+1)*2])
     dtext = dtext[:1]
     text.extend(dis_text)
