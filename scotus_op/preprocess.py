@@ -1,5 +1,3 @@
-DATADR = '/home/anna/fast/scotus_big'
-
 # ====================================================================================== #
 # Preprocessing raw data files such as from CourtListener.
 # Author: Eddie Lee, edlee@csh.ac.at
@@ -10,6 +8,8 @@ import json
 import re
 from string import punctuation
 from spacy.lang.en import English
+
+from .dir import DATADR
 
 
 def extract_plain_txt():
@@ -72,7 +72,7 @@ def split_by_sub_op(text):
                 if conc_head in cheaders:
                     # combine everything from that point in the past onwards
                     ix = cheaders.index(conc_head)
-                    conc_text[ix] = ''.join(conc_text[ix:])+dtext[(i+1)*2]
+                    conc_text[ix] = ''.join(conc_text[ix:])+text[(i+1)*2]
 
                     del conc_text[ix+1:]
                     del labels[ix+2:]
@@ -101,7 +101,6 @@ def split_by_sub_op(text):
         else:
             dis_head = standardize_header(dtext[i*2+1])
             # check that this head has not already appeared in the past
-            print(dis_head)
             if dis_head in dheaders:
                 # combine everything from that point in the past onwards
                 ix = dheaders.index(dis_head)
@@ -133,6 +132,9 @@ def preprocess_plain_txt_op(text):
     -------
     str
     """
+    
+    # remove page headers which typically consist of a new line preceded by a line break
+    text = ''.join(re.split(r'\x0c.*\n', text))
 
     # configure auto parsing
     nlp = English()
@@ -146,6 +148,9 @@ def preprocess_plain_txt_op(text):
     for s in doc.sents:
         # lemmatized
         t = s.lemma_
+
+        # remove new strings that simply split words onto two lines
+        t = t.replace('-\n', '')
 
         # remove new string
         t = t.replace('\n', ' ')
