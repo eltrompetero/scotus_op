@@ -11,6 +11,7 @@ from spacy.lang.en import English
 
 from .dir import *
 
+punctuation += '“”’'
 
 def extract_plain_txt():
     """Iterate thru all JSON raw files and extract plain text for each json from HTML
@@ -105,6 +106,9 @@ def preprocess_plain_txt_op(text):
     -------
     str
     """
+    
+    # remove page headers which typically consist of four lines preceded by a line break
+    text = ''.join(re.split(r'\x0c.*\n.*\n.*\n.*\n', text))
 
     # configure auto parsing
     nlp = English()
@@ -118,6 +122,9 @@ def preprocess_plain_txt_op(text):
     for s in doc.sents:
         # lemmatized
         t = s.lemma_
+
+        # remove new strings that simply split words onto two lines
+        t = t.replace('-\n', '')
 
         # remove new string
         t = t.replace('\n', ' ')
