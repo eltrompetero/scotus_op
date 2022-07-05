@@ -8,6 +8,7 @@ import json
 import re
 from string import punctuation
 from spacy.lang.en import English
+import enchant
 
 from .dir import DATADR
 
@@ -168,3 +169,42 @@ def preprocess_plain_txt_op(text):
             cleaned_text.append(t.lower())
             
     return cleaned_text
+
+def combine_split_words(text):
+    en_dict = enchant.Dict("en_US")
+    
+    lines = [el.strip() for el in text.split('\n')]
+    revised_text = [lines[0]]
+
+    # concatenate two lines with one another assuming that a word is split over them
+    # if (1) the first and last words are not words, (2) one is not a word and the 
+    # concatenation is (ignoring punctuation and empty lines)
+    # TODO: footnotes not handled
+    for i in range(1, len(lines)):
+        appended = False
+
+        if lines[i-1] and lines[i]:
+            last_word = lines[i-1].split(' ')[-1]
+            first_word = lines[i].split(' ')[0]
+
+            if not '.' in last_word and not ';' in last_word:
+                last_word = ''.join([i for i in last_word if not i in punctuation])
+                first_word = ''.join([i for i in first_word if not i in punctuation])
+
+                if last_word and first_word:
+                    # scenario where one has to concat to prev line
+                    last_is_real = en_dict.check(last_word)
+                    first_is_real = en_dict.check(first_word)            
+
+                    if not last_is_real and not first_is_real:
+                        revised_text[-1] += lines[i]
+                        appended = True
+                    else:
+                        concat = last_word + first_word
+                        concat_is_real = en_dict.check(concat)
+                        if concat_is_real:
+                            revised_text[-1] += lines[i]
+                            appended = True
+        if not appended:
+            revised_text.append(lines[i])
+    return revised_text
