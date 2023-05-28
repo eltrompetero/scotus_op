@@ -1,3 +1,5 @@
+DATADR = '/home/anna/fast/scotus_big'
+
 # ====================================================================================== #
 # Preprocessing raw data files such as from CourtListener.
 # Author: Eddie Lee, edlee@csh.ac.at
@@ -8,9 +10,8 @@ import json
 import re
 from string import punctuation
 from spacy.lang.en import English
-import enchant
 
-from .dir import DATADR
+import enchant
 
 
 def extract_plain_txt():
@@ -52,6 +53,8 @@ def split_by_sub_op(text):
     -------
     list of str
     """
+    
+    
     
     labels = ['maj']
     
@@ -102,6 +105,7 @@ def split_by_sub_op(text):
         else:
             dis_head = standardize_header(dtext[i*2+1])
             # check that this head has not already appeared in the past
+#             print(dis_head)
             if dis_head in dheaders:
                 # combine everything from that point in the past onwards
                 ix = dheaders.index(dis_head)
@@ -122,6 +126,136 @@ def split_by_sub_op(text):
 def standardize_header(s):
     return ''.join(s.split()).replace(',', '').replace('.', '')
 
+def start_at_start(text):
+
+#     t1 = text.replace('\n',' ')
+#     text.replace(/\s*/g,"").match(/mycats/g)
+    s1 = r'((d'
+    s = 'eliveredtheopinion|announcedthejudgement)oftheCourt)'
+    s = s1+s.replace('','\\s*')
+#     print(s)
+#     s = '((delivered the opinion|announced the judgement) of the Court)'
+#     s = s.replace('','\\s*')
+    text = re.split(s, text)
+#     text = re.split(r'(\n.*[A-Z]{3,}.{0,10}concurring\.{,1}[ ]*\n)', text)
+    if (len(text) <4):
+        return False
+#     print(''.join(text[0:2])[-200:])
+#     return ''.join(text[3:])
+    num = (len(text)-1)//3
+        
+    return text[-1],num
+
+def cut_weird_conc(sents):
+    phrase = r'(((it be |reversed and |)so order$)|it be so order)'
+    
+#     print(phrase)
+   # |(judge?ment|conviction|decision).{,80}be affirm|be affirm(ed)?$'#(.|\n)*concur'
+#     "^(reversed and )?so order$"
+#     print(s)
+#     s = '((delivered the opinion|announced the judgement) of the Court)'
+#     s = s.replace('','\\s*')
+    not_found = True
+    i = 0
+    # finds the first one
+    while (not_found and i <len(sents)):
+#         print(sents[i])
+        if re.search(phrase, sents[i]):
+            not_found = False
+            
+        i += 1
+        
+#     print(i)
+    if (i == len(sents) and not_found):
+        return sents, False
+    return sents[:i-1], True
+
+def cut_lines(sents): 
+    phrase = r'the sya?llabus constitute no part of the opinion of the court but have be prepare by the reporter of decisions for the con ?venience of the reader {0,3}$|see united states v detroit lumber co  ?200 u ?s 321 337|see united states v detroit timber  lumber co'
+    phrase2 = r'opinion of the court'
+    not_found = True
+    i = 0
+    inds = []
+    # finds the first one
+    while (i <len(sents)):
+#         print(sents[i])
+        if re.search(phrase, sents[i]):
+            not_found = False
+            inds.append(i)
+        sents[i] = re.sub(phrase2,'',sents[i])
+            
+        i += 1
+        
+#     print(i)
+    if (not_found):
+        
+        return sents, False
+        
+
+    for i in inds:
+        
+        sents[i] = ''
+    return sents, True
+#     return sents[:i-1]+sents[i+1:], True
+
+def cut_lemmatized_syllabus(sents):
+#     t1 = text.replace('\n',' ')
+#     text.replace(/\s*/g,"").match(/mycats/g)
+#     s1 = r'((d'
+#     s = 'eliveredtheopinion|announcedthejudgement)oftheCourt)'
+#     s = s1+s.replace('','\\s*')
+    phrase = r'(deliver|announce) the (opinion|judge?ment) (for a unanimous|of the|for the) court'
+#     print(s)
+#     s = '((delivered the opinion|announced the judgement) of the Court)'
+#     s = s.replace('','\\s*')
+    not_found = True
+    i = len(sents) - 1
+    while (not_found and i > -1):
+#         print(sents[i])
+        if re.search(phrase, sents[i]):
+            not_found = False
+            
+        i -= 1
+    if (i == -1 and not_found):
+        return sents, False
+    return sents[i+2:], True
+
+
+#     garbage
+
+
+    for i in range(len(sents)):
+        if s in sents[i]:
+            occs.append(i)
+#     text = re.split(s, text)
+#     text = re.split(r'(\n.*[A-Z]{3,}.{0,10}concurring\.{,1}[ ]*\n)', text)
+    if (len(occs) <1):
+        return False
+#     print(''.join(text[0:2])[-200:])
+#     return ''.join(text[3:])
+        
+    return sents[occ[-1]+1:],len(occs)
+
+def start_at_start(text):
+
+#     t1 = text.replace('\n',' ')
+#     text.replace(/\s*/g,"").match(/mycats/g)
+    s1 = r'((d'
+    s = 'eliveredtheopinion|announcedthejudgement)oftheCourt)'
+    s = s1+s.replace('','\\s*')
+#     print(s)
+#     s = '((delivered the opinion|announced the judgement) of the Court)'
+#     s = s.replace('','\\s*')
+    text = re.split(s, text)
+#     text = re.split(r'(\n.*[A-Z]{3,}.{0,10}concurring\.{,1}[ ]*\n)', text)
+    if (len(text) <4):
+        return False
+#     print(''.join(text[0:2])[-200:])
+#     return ''.join(text[3:])
+    num = (len(text)-1)//3
+        
+    return text[-1],num
+
 def preprocess_plain_txt_op(text):
     """Clean up plain text and turn it into sentences.
 
@@ -133,9 +267,6 @@ def preprocess_plain_txt_op(text):
     -------
     str
     """
-    
-    # remove page headers which typically consist of a new line preceded by a line break
-    text = ''.join(re.split(r'\x0c.*\n', text))
 
     # configure auto parsing
     nlp = English()
@@ -150,9 +281,6 @@ def preprocess_plain_txt_op(text):
         # lemmatized
         t = s.lemma_
 
-        # remove new strings that simply split words onto two lines
-        t = t.replace('-\n', '')
-
         # remove new string
         t = t.replace('\n', ' ')
 
@@ -165,8 +293,11 @@ def preprocess_plain_txt_op(text):
         # removed starting number + space (page no.?)
         t = re.sub('^[0-9]*\s*', '', t)
 
-        if count<(.3*len(t)):
+        if count<(.3*len(t)) or len(t)-count>5:
             cleaned_text.append(t.lower())
+#         else:
+#             print(t)
+#             print('\n')
             
     return cleaned_text
 
