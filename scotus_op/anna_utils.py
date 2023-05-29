@@ -1,7 +1,7 @@
 import glob
 from utils import split_sentences
 
-import api
+import nlp.api as api
 
 import logging
 import pandas as pd
@@ -11,7 +11,9 @@ import requests
 
 from df_params import *
 
-from utils import OpinionDocumentsIterable
+from nlp.utils import OpinionDocumentsIterable
+
+
 
 def prepare_data():
     write_to_sentence_files('../../fast/cl_scotus/opinions/*.json')
@@ -70,7 +72,7 @@ def get_plain_text(path_to_json,old):
         return plain_text
     
 # writes all the json files with plain text attributes to text files in a new folder with each sentence on a new line
-def write_to_sentence_files(path_to_dir,path_to_txt,old):
+def write_to_sentence_files(path_to_dir, path_to_txt, old):
 #     print(path_to_txt)
     # this is the place they are currently located: '../../fast/cl_scotus/opinions/*.json'
     json_files = glob.glob(path_to_dir)

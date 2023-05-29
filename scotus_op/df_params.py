@@ -1,18 +1,18 @@
 # define the paths where things are located (use the big file bc thats more data)
-cleaned_folder = '/home/anna/fast/scotus_big/cleaned_text/'
-json_folder = '/home/anna/fast/scotus_big/scotus/'
+cleaned_folder = './scotus_big/cleaned_text/'
+json_folder = './scotus_big/scotus/'
 scdb_path = '/home/anna/fast/SCDB_2021_01_caseCentered_Citation.csv'
 justice_path = '/home/anna/fast/SCDB_2021_01_justiceCentered_Citation.csv'
 cluster_path = '/home/anna/fast/scotus_big/clusters/cluster_'
 # pickle_df_path = '/home/anna/fast/scotus_big/df' - old path, new one has vecs and scdb attrs up to date
-pickle_df_path = '/home/anna/fast/scotus_big/df_final'
+pickle_df_path = './scotus_big/df_final'
 pickle_df_path_new = '/home/anna/fast/scotus_big/df_with_normed'
 pickle_df_path_with_vecs = '/home/anna/fast/scotus_big/df_vecs' # this is right after the vectors were generated
-id_df_path = '/home/anna/fast/scotus_big/df_matched_ids'
+id_df_path = './scotus_big/df_matched_ids'
 # cleaned_and_sentencized_path = '/home/anna/fast/scotus_big/sentence_text/'
 # cleaned_and_sentencized_path = '/home/anna/fast/scotus_big/cleaned_text/'
 # cleaned_and_sentencized_path = '/home/anna/fast/scotus_big/cleaned_text_1/'
-cleaned_and_sentencized_path = '/home/anna/fast/scotus_big/cleaned_text_no_sentence/'
+cleaned_and_sentencized_path = './scotus_big/cleaned_text_no_sentence/'
 judge_avg_vecs = '/home/anna/fast/scotus_big/judge_avg'
 bow_path = '/home/anna/fast/scotus_big/bow'
 
