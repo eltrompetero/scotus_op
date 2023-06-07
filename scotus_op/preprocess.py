@@ -50,6 +50,9 @@ def extract_plain_txt():
 
         # replace U. S. acronym with U.S.
         out_text = re.sub('U. S.', 'U.S.', out_text)
+
+        # replace D. C. acronym with D.C. when it appears with Washington
+        out_text = re.sub('Washington, D. C.', 'Washington D.C.', out_text)
         
         # punctuation changes
         # standardize ellipses to be ...
